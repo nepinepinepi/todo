@@ -196,6 +196,8 @@ sam deploy -g -t infra/template.yaml
 | `TABLE_NAME`        | DynamoDB テーブル名         | `Todos`                 |
 | `STAGE`             | 環境識別子 (dev/stage/prod) | `dev`                   |
 
+これらは `.env.example` をコピーして設定できます。
+
 ## ライセンス
 
 MIT © 2025 Your Name

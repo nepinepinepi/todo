@@ -1,0 +1,10 @@
+{
+  "name": "todo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node run-tests.js"
+  },
+  "license": "ISC",
+  "private": true
+}

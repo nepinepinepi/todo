@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Todo App SAM template
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Handler: dist/handlers.createTodo
+    Architectures: [x86_64]
+Resources:
+  TodosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableNameParam
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+  TodosBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-spa'
+  ApiGateway:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+  CreateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/handlers.createTodo
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameParam
+  ListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/handlers.listTodos
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameParam
+  UpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/handlers.updateTodo
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameParam
+  DeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/handlers.deleteTodo
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameParam
+  StaticDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt TodosBucket.DomainName
+            Id: spa
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: spa
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: ['GET', 'HEAD', 'OPTIONS']
+Parameters:
+  TableNameParam:
+    Type: String
+    Default: Todos
+  Stage:
+    Type: String
+    Default: dev
+Outputs:
+  ApiUrl:
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
